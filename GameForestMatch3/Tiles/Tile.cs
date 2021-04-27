@@ -14,16 +14,18 @@ namespace GameForestMatch3.Tiles
     
     public abstract class Tile
     {
+        public static Vector2 TextureSize { get; } = new Vector2(130, 124); // Size of texture.
         public Texture2D Texture { get; set; }
         public Vector2 Position { get; set; }
         
         public abstract TileType Type { get; }
         public abstract int Prize { get; }
         public abstract string ContentName { get; }
+        public bool IsSelected { get; set; } = false;
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.Draw(Texture, Position, Color.White);
+            spriteBatch.Draw(Texture, Position, IsSelected ? Color.Gray : Color.White);
         }
     }
 }
