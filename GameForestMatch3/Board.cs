@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using GameForestMatch3.Tiles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -7,30 +8,84 @@ namespace GameForestMatch3
 {
     public class Board
     {
+        private readonly int _rows;
         private readonly int _columns;
         private readonly Vector2 _offset;
-        private readonly int _rows;
+        private List<TilePosition> _currentMatch;
         private State _currentState;
 
         private Tile[,] _matrix;
+        private TilePosition _firstSelectedTile;
+        private TilePosition _secondSelectedTile;
 
-        private Tuple<int, int> _selectedTileIndex;
+        private readonly RandomTilesGenerator _tilesGenerator;
 
         public Board(int rows, int columns, Vector2 offset)
         {
             _rows = rows;
             _columns = columns;
             _offset = offset;
+            _tilesGenerator = new RandomTilesGenerator(rows, columns);
             FillMatrix();
         }
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            foreach (var tile in _matrix) tile.Draw(spriteBatch);
+            for (var row = 0; row < _rows; row++)
+            for (var col = 0; col < _columns; col++)
+                _matrix[row, col]?.Draw(spriteBatch, GetTileDrawPosition(row, col));
         }
 
         public void Update()
         {
+            switch (_currentState)
+            {
+                case State.SwapTiles:
+                {
+                    SwapTiles(_firstSelectedTile, _secondSelectedTile);
+                    ChangeState(State.Backward);
+                    break;
+                }
+                case State.Backward:
+                {
+                    _currentMatch = FindMatch(_secondSelectedTile);
+                    if (_currentMatch == null)
+                    {
+                        SwapTiles(_firstSelectedTile, _secondSelectedTile);
+                        ChangeState(State.Start);
+                    }
+                    else
+                    {
+                        ChangeState(State.DeleteMatch);
+                    }
+
+                    break;
+                }
+                case State.DeleteMatch:
+                {
+                    foreach (var tilePosition in _currentMatch) _matrix[tilePosition.Row, tilePosition.Col] = null;
+                    ChangeState(State.ShiftTiles);
+                    break;
+                }
+                case State.FillTiles:
+                {
+                    for (var row = 0; row < _rows; row++)
+                    for (var col = 0; col < _columns; col++)
+                        if (_matrix[row, col] == null)
+                            _matrix[row, col] = _tilesGenerator.GetNext();
+                    ChangeState(State.Start);
+                }
+                    break;
+                case State.ShiftTiles:
+                {
+                    for (var row = _rows - 1; row > 0; row--)
+                    for (var col = 0; col < _columns; col++)
+                        if (_matrix[row, col] == null)
+                            SwapTiles(new TilePosition(row, col), new TilePosition(row - 1, col));
+                    ChangeState(State.FillTiles);
+                    break;
+                }
+            }
         }
 
         public void MouseClick(Vector2 position)
@@ -39,11 +94,11 @@ namespace GameForestMatch3
             {
                 case State.Start:
                 {
-                    var tileIndex = TileByMouseClick(position);
-                    if (tileIndex != null)
+                    var tilePosition = TileByMouseClick(position);
+                    if (tilePosition != null)
                     {
-                        _selectedTileIndex = tileIndex;
-                        _matrix[_selectedTileIndex.Item1, _selectedTileIndex.Item2].IsSelected = true;
+                        _firstSelectedTile = tilePosition;
+                        _matrix[_firstSelectedTile.Row, _firstSelectedTile.Col].IsSelected = true;
                         ChangeState(State.FirstSelected);
                     }
 
@@ -51,55 +106,39 @@ namespace GameForestMatch3
                 }
                 case State.FirstSelected:
                 {
-                    _matrix[_selectedTileIndex.Item1, _selectedTileIndex.Item2].IsSelected = false;
-                    ChangeState(State.Start);
-
-                    var tileIndex = TileByMouseClick(position);
-                    if (tileIndex != null && tileIndex != _selectedTileIndex)
-                        if (IsNearTile(tileIndex, _selectedTileIndex))
-                            SwapTiles(tileIndex, _selectedTileIndex);
+                    _matrix[_firstSelectedTile.Row, _firstSelectedTile.Col].IsSelected = false;
+                    var tilePosition = TileByMouseClick(position);
+                    if (tilePosition != null && IsNearTile(tilePosition, _firstSelectedTile))
+                    {
+                        _secondSelectedTile = tilePosition;
+                        ChangeState(State.SwapTiles);
+                    }
+                    else
+                    {
+                        ChangeState(State.Start);
+                    }
 
                     break;
                 }
-                case State.Backward:
-                    break;
-                case State.Matches:
-                    break;
-                case State.ShiftTiles:
-                    break;
             }
         }
 
         private void FillMatrix()
         {
-            _matrix = new Tile[_rows, _columns];
-            var rand = new Random();
-            var drawPos = _offset;
-
-            for (var i = 0; i < _rows; i++)
-            {
-                for (var j = 0; j < _columns; j++)
-                {
-                    var tileNumber = rand.Next(0, 5);
-                    var tile = TileFactory.CreateTile((TileType) tileNumber);
-                    tile.Position = drawPos;
-                    drawPos.X += Tile.TextureSize.X;
-                    _matrix[i, j] = tile;
-                }
-
-                drawPos.X = _offset.X;
-                drawPos.Y += Tile.TextureSize.Y;
-            }
+            _matrix = _tilesGenerator.GetInitMatrix();
         }
 
-        private Tuple<int, int> TileByMouseClick(Vector2 position)
+        private TilePosition TileByMouseClick(Vector2 position)
         {
-            for (var i = 0; i < _rows; i++)
-            for (var j = 0; j < _columns; j++)
+            for (var row = 0; row < _rows; row++)
+            for (var col = 0; col < _columns; col++)
             {
-                var tile = _matrix[i, j];
-                if (new Rectangle(tile.Position.ToPoint(), Tile.TextureSize.ToPoint()).Contains(position))
-                    return new Tuple<int, int>(i, j);
+                var tile = _matrix[row, col];
+                if (tile == null)
+                    continue;
+                var tilePosition = GetTileDrawPosition(row, col);
+                if (new Rectangle(tilePosition.ToPoint(), Tile.TextureSize.ToPoint()).Contains(position))
+                    return new TilePosition(row, col);
             }
 
             return null;
@@ -110,30 +149,74 @@ namespace GameForestMatch3
             _currentState = state;
         }
 
-        private bool IsNearTile(Tuple<int, int> index1, Tuple<int, int> index2)
+        private bool IsNearTile(TilePosition position1, TilePosition position2)
         {
-            return Math.Abs(index1.Item1 - index2.Item1) + Math.Abs(index1.Item2 - index2.Item2) < 2;
+            return Math.Abs(position1.Row - position2.Row) + Math.Abs(position1.Col - position2.Col) < 2;
         }
 
-        private void SwapTiles(Tuple<int, int> index1, Tuple<int, int> index2)
+        private void SwapTiles(TilePosition position1, TilePosition position2)
         {
-            var pos1 = _matrix[index1.Item1, index1.Item2].Position;
-            var pos2 = _matrix[index2.Item1, index2.Item2].Position;
+            var tmp = _matrix[position1.Row, position1.Col];
+            _matrix[position1.Row, position1.Col] = _matrix[position2.Row, position2.Col];
+            _matrix[position2.Row, position2.Col] = tmp;
+        }
 
-            var tmp = _matrix[index1.Item1, index1.Item2];
-            _matrix[index1.Item1, index1.Item2] = _matrix[index2.Item1, index2.Item2];
-            _matrix[index2.Item1, index2.Item2] = tmp;
+        private List<TilePosition> FindMatch(TilePosition position) // TODO do this simple.
+        {
+            var positions = new List<TilePosition> {position};
+            var checkedTile = _matrix[position.Row, position.Col];
+            for (var i = position.Col + 1; i < _columns; i++)
+            {
+                if (_matrix[position.Row, i]?.Type == checkedTile.Type)
+                {
+                    positions.Add(new TilePosition(position.Row, i));
+                    continue;
+                }
 
-            _matrix[index1.Item1, index1.Item2].Position = pos1;
-            _matrix[index2.Item1, index2.Item2].Position = pos2;
+                break;
+            }
+
+            for (var i = position.Col - 1; i >= 0; i--)
+            {
+                if (_matrix[position.Row, i]?.Type == checkedTile.Type)
+                {
+                    positions.Add(new TilePosition(position.Row, i));
+                    continue;
+                }
+
+                break;
+            }
+
+            if (positions.Count >= 3) return positions;
+
+            return null;
+        }
+
+        private Vector2 GetTileDrawPosition(int row, int col)
+        {
+            return new Vector2(_offset.X + Tile.TextureSize.X * col, _offset.Y + Tile.TextureSize.Y * row);
+        }
+
+        private class TilePosition
+        {
+            public TilePosition(int row, int col)
+            {
+                Row = row;
+                Col = col;
+            }
+
+            public int Row { get; }
+            public int Col { get; }
         }
 
         private enum State
         {
             Start,
             FirstSelected,
+            SwapTiles,
             Backward,
-            Matches,
+            DeleteMatch,
+            FillTiles,
             ShiftTiles
         }
     }
