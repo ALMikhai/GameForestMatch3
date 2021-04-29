@@ -1,40 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
 using GameForestMatch3.Tiles;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 
 namespace GameForestMatch3
 {
-    public class Board
+    public class BoardModel
     {
-        private readonly int _rows;
-        private readonly int _columns;
-        private readonly Vector2 _offset;
+        private readonly RandomTilesGenerator _tilesGenerator;
         private List<TilePosition> _currentMatch;
         private State _currentState;
-
-        private Tile[,] _matrix;
         private TilePosition _firstSelectedTile;
         private TilePosition _secondSelectedTile;
 
-        private readonly RandomTilesGenerator _tilesGenerator;
-
-        public Board(int rows, int columns, Vector2 offset)
+        public BoardModel(int rows, int columns)
         {
-            _rows = rows;
-            _columns = columns;
-            _offset = offset;
+            Rows = rows;
+            Columns = columns;
             _tilesGenerator = new RandomTilesGenerator(rows, columns);
-            FillMatrix();
+            Matrix = _tilesGenerator.GetInitMatrix();
         }
 
-        public void Draw(SpriteBatch spriteBatch)
-        {
-            for (var row = 0; row < _rows; row++)
-            for (var col = 0; col < _columns; col++)
-                _matrix[row, col]?.Draw(spriteBatch, GetTileDrawPosition(row, col));
-        }
+        public int Rows { get; }
+        public int Columns { get; }
+
+        public Tile[,] Matrix { get; }
 
         public void Update()
         {
@@ -63,24 +52,24 @@ namespace GameForestMatch3
                 }
                 case State.DeleteMatch:
                 {
-                    foreach (var tilePosition in _currentMatch) _matrix[tilePosition.Row, tilePosition.Col] = null;
+                    foreach (var tilePosition in _currentMatch) Matrix[tilePosition.Row, tilePosition.Col] = null;
                     ChangeState(State.ShiftTiles);
                     break;
                 }
                 case State.FillTiles:
                 {
-                    for (var row = 0; row < _rows; row++)
-                    for (var col = 0; col < _columns; col++)
-                        if (_matrix[row, col] == null)
-                            _matrix[row, col] = _tilesGenerator.GetNext();
+                    for (var row = 0; row < Rows; row++)
+                    for (var col = 0; col < Columns; col++)
+                        if (Matrix[row, col] == null)
+                            Matrix[row, col] = _tilesGenerator.GetNext();
                     ChangeState(State.Start);
                 }
                     break;
                 case State.ShiftTiles:
                 {
-                    for (var row = _rows - 1; row > 0; row--)
-                    for (var col = 0; col < _columns; col++)
-                        if (_matrix[row, col] == null)
+                    for (var row = Rows - 1; row > 0; row--)
+                    for (var col = 0; col < Columns; col++)
+                        if (Matrix[row, col] == null)
                             SwapTiles(new TilePosition(row, col), new TilePosition(row - 1, col));
                     ChangeState(State.FillTiles);
                     break;
@@ -88,17 +77,16 @@ namespace GameForestMatch3
             }
         }
 
-        public void MouseClick(Vector2 position)
+        public void ClickByTile(TilePosition tilePosition)
         {
             switch (_currentState)
             {
                 case State.Start:
                 {
-                    var tilePosition = TileByMouseClick(position);
                     if (tilePosition != null)
                     {
                         _firstSelectedTile = tilePosition;
-                        _matrix[_firstSelectedTile.Row, _firstSelectedTile.Col].IsSelected = true;
+                        Matrix[_firstSelectedTile.Row, _firstSelectedTile.Col].IsSelected = true;
                         ChangeState(State.FirstSelected);
                     }
 
@@ -106,8 +94,7 @@ namespace GameForestMatch3
                 }
                 case State.FirstSelected:
                 {
-                    _matrix[_firstSelectedTile.Row, _firstSelectedTile.Col].IsSelected = false;
-                    var tilePosition = TileByMouseClick(position);
+                    Matrix[_firstSelectedTile.Row, _firstSelectedTile.Col].IsSelected = false;
                     if (tilePosition != null && IsNearTile(tilePosition, _firstSelectedTile))
                     {
                         _secondSelectedTile = tilePosition;
@@ -123,27 +110,6 @@ namespace GameForestMatch3
             }
         }
 
-        private void FillMatrix()
-        {
-            _matrix = _tilesGenerator.GetInitMatrix();
-        }
-
-        private TilePosition TileByMouseClick(Vector2 position)
-        {
-            for (var row = 0; row < _rows; row++)
-            for (var col = 0; col < _columns; col++)
-            {
-                var tile = _matrix[row, col];
-                if (tile == null)
-                    continue;
-                var tilePosition = GetTileDrawPosition(row, col);
-                if (new Rectangle(tilePosition.ToPoint(), Tile.TextureSize.ToPoint()).Contains(position))
-                    return new TilePosition(row, col);
-            }
-
-            return null;
-        }
-
         private void ChangeState(State state)
         {
             _currentState = state;
@@ -156,18 +122,18 @@ namespace GameForestMatch3
 
         private void SwapTiles(TilePosition position1, TilePosition position2)
         {
-            var tmp = _matrix[position1.Row, position1.Col];
-            _matrix[position1.Row, position1.Col] = _matrix[position2.Row, position2.Col];
-            _matrix[position2.Row, position2.Col] = tmp;
+            var tmp = Matrix[position1.Row, position1.Col];
+            Matrix[position1.Row, position1.Col] = Matrix[position2.Row, position2.Col];
+            Matrix[position2.Row, position2.Col] = tmp;
         }
 
         private List<TilePosition> FindMatch(TilePosition position) // TODO do this simple.
         {
             var positions = new List<TilePosition> {position};
-            var checkedTile = _matrix[position.Row, position.Col];
-            for (var i = position.Col + 1; i < _columns; i++)
+            var checkedTile = Matrix[position.Row, position.Col];
+            for (var i = position.Col + 1; i < Columns; i++)
             {
-                if (_matrix[position.Row, i]?.Type == checkedTile.Type)
+                if (Matrix[position.Row, i]?.Type == checkedTile.Type)
                 {
                     positions.Add(new TilePosition(position.Row, i));
                     continue;
@@ -178,7 +144,7 @@ namespace GameForestMatch3
 
             for (var i = position.Col - 1; i >= 0; i--)
             {
-                if (_matrix[position.Row, i]?.Type == checkedTile.Type)
+                if (Matrix[position.Row, i]?.Type == checkedTile.Type)
                 {
                     positions.Add(new TilePosition(position.Row, i));
                     continue;
@@ -192,12 +158,7 @@ namespace GameForestMatch3
             return null;
         }
 
-        private Vector2 GetTileDrawPosition(int row, int col)
-        {
-            return new Vector2(_offset.X + Tile.TextureSize.X * col, _offset.Y + Tile.TextureSize.Y * row);
-        }
-
-        private class TilePosition
+        public class TilePosition
         {
             public TilePosition(int row, int col)
             {
