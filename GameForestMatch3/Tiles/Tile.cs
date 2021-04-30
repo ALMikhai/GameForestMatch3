@@ -16,6 +16,8 @@ namespace GameForestMatch3.Tiles
     {
         public static Vector2 TextureSize { get; } = new Vector2(130, 124); // Size of texture.
         public Texture2D Texture { get; set; }
+        public Vector2 Position { get; set; }
+        public bool IsDeleted { get; set; } = false;
 
         public abstract TileType Type { get; }
         public abstract int Prize { get; }

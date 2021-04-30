@@ -4,8 +4,31 @@ using GameForestMatch3.Tiles;
 
 namespace GameForestMatch3
 {
+    public class TilePosition
+    {
+        public TilePosition(int row, int col)
+        {
+            Row = row;
+            Col = col;
+        }
+
+        public int Row { get; }
+        public int Col { get; }
+    }
+
     public class BoardModel
     {
+        public delegate void TileEditEventHandler(Tile tile, TilePosition position);
+        public delegate void SwapTileEventHandler(TilePosition position1, TilePosition position2);
+        
+        public int Rows { get; }
+        public int Columns { get; }
+
+        public Tile[,] Matrix { get; }
+        public event SwapTileEventHandler TileSwapped;
+        public event TileEditEventHandler TileSpawned;
+        public event TileEditEventHandler TileDeleted;
+
         private readonly RandomTilesGenerator _tilesGenerator;
         private List<TilePosition> _currentMatch;
         private State _currentState;
@@ -19,11 +42,6 @@ namespace GameForestMatch3
             _tilesGenerator = new RandomTilesGenerator(rows, columns);
             Matrix = _tilesGenerator.GetInitMatrix();
         }
-
-        public int Rows { get; }
-        public int Columns { get; }
-
-        public Tile[,] Matrix { get; }
 
         public void Update()
         {
@@ -52,7 +70,11 @@ namespace GameForestMatch3
                 }
                 case State.DeleteMatch:
                 {
-                    foreach (var tilePosition in _currentMatch) Matrix[tilePosition.Row, tilePosition.Col] = null;
+                    foreach (var tilePosition in _currentMatch)
+                    {
+                        TileDeleted?.Invoke(Matrix[tilePosition.Row, tilePosition.Col], tilePosition);
+                        Matrix[tilePosition.Row, tilePosition.Col].IsDeleted = true;
+                    }
                     ChangeState(State.ShiftTiles);
                     break;
                 }
@@ -60,8 +82,12 @@ namespace GameForestMatch3
                 {
                     for (var row = 0; row < Rows; row++)
                     for (var col = 0; col < Columns; col++)
-                        if (Matrix[row, col] == null)
+                        if (Matrix[row, col].IsDeleted)
+                        {
                             Matrix[row, col] = _tilesGenerator.GetNext();
+                            TileSpawned?.Invoke(Matrix[row, col], new TilePosition(row, col));
+                        }
+
                     ChangeState(State.Start);
                 }
                     break;
@@ -69,8 +95,8 @@ namespace GameForestMatch3
                 {
                     for (var row = Rows - 1; row > 0; row--)
                     for (var col = 0; col < Columns; col++)
-                        if (Matrix[row, col] == null)
-                            SwapTiles(new TilePosition(row, col), new TilePosition(row - 1, col));
+                        if (Matrix[row, col].IsDeleted)
+                            SwapTiles(new TilePosition(row - 1, col), new TilePosition(row, col));
                     ChangeState(State.FillTiles);
                     break;
                 }
@@ -122,6 +148,11 @@ namespace GameForestMatch3
 
         private void SwapTiles(TilePosition position1, TilePosition position2)
         {
+            if (Matrix[position1.Row, position1.Col].IsDeleted == false)
+                TileSwapped?.Invoke(position1, position2);
+            if (Matrix[position2.Row, position2.Col].IsDeleted == false)
+                TileSwapped?.Invoke(position2, position1);
+
             var tmp = Matrix[position1.Row, position1.Col];
             Matrix[position1.Row, position1.Col] = Matrix[position2.Row, position2.Col];
             Matrix[position2.Row, position2.Col] = tmp;
@@ -156,18 +187,6 @@ namespace GameForestMatch3
             if (positions.Count >= 3) return positions;
 
             return null;
-        }
-
-        public class TilePosition
-        {
-            public TilePosition(int row, int col)
-            {
-                Row = row;
-                Col = col;
-            }
-
-            public int Row { get; }
-            public int Col { get; }
         }
 
         private enum State
