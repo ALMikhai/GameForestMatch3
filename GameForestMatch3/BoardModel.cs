@@ -19,12 +19,13 @@ namespace GameForestMatch3
     public class BoardModel
     {
         public delegate void TileEditEventHandler(Tile tile, TilePosition position);
+
         public delegate void SwapTileEventHandler(TilePosition position1, TilePosition position2);
-        
+
         public int Rows { get; }
         public int Columns { get; }
         public Tile[,] Matrix { get; }
-        
+
         public event SwapTileEventHandler TileSwapped;
         public event TileEditEventHandler TileSpawned;
         public event TileEditEventHandler TileDeleted;
@@ -75,6 +76,7 @@ namespace GameForestMatch3
                         TileDeleted?.Invoke(Matrix[tilePosition.Row, tilePosition.Col], tilePosition);
                         Matrix[tilePosition.Row, tilePosition.Col].IsDeleted = true;
                     }
+
                     ChangeState(State.ShiftTiles);
                     break;
                 }
@@ -95,8 +97,17 @@ namespace GameForestMatch3
                 {
                     for (var row = Rows - 1; row > 0; row--)
                     for (var col = 0; col < Columns; col++)
-                        if (Matrix[row, col].IsDeleted)
-                            SwapTiles(new TilePosition(row - 1, col), new TilePosition(row, col));
+                        if (Matrix[row, col].IsDeleted && !Matrix[row - 1, col].IsDeleted)
+                        {
+                            var destinationRow = row;
+                            while (destinationRow + 1 < Rows && Matrix[destinationRow + 1, col].IsDeleted)
+                            {
+                                destinationRow++;
+                            }
+
+                            SwapTiles(new TilePosition(row - 1, col), new TilePosition(destinationRow, col));
+                        }
+
                     ChangeState(State.FillTiles);
                     break;
                 }
@@ -159,6 +170,7 @@ namespace GameForestMatch3
         {
             var positions = new List<TilePosition> {position};
             var checkedTile = Matrix[position.Row, position.Col];
+
             for (var i = position.Col + 1; i < Columns; i++)
             {
                 if (Matrix[position.Row, i]?.Type == checkedTile.Type)
@@ -175,6 +187,32 @@ namespace GameForestMatch3
                 if (Matrix[position.Row, i]?.Type == checkedTile.Type)
                 {
                     positions.Add(new TilePosition(position.Row, i));
+                    continue;
+                }
+
+                break;
+            }
+
+            if (positions.Count >= 3) return positions;
+
+            positions = new List<TilePosition> {position};
+
+            for (var i = position.Row + 1; i < Rows; i++)
+            {
+                if (Matrix[i, position.Col]?.Type == checkedTile.Type)
+                {
+                    positions.Add(new TilePosition(i, position.Col));
+                    continue;
+                }
+
+                break;
+            }
+
+            for (var i = position.Row - 1; i >= 0; i--)
+            {
+                if (Matrix[i, position.Col]?.Type == checkedTile.Type)
+                {
+                    positions.Add(new TilePosition(i, position.Col));
                     continue;
                 }
 
