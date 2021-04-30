@@ -10,16 +10,16 @@ namespace GameForestMatch3
         private readonly int _animationTime;
         private int _currentTime;
         private readonly Vector2 _direction;
-        private readonly Tile _tile;
+        private readonly TileView _tileView;
         public bool IsFinished { get; private set; }
 
-        public MoveTileAnimation(int milliseconds, Tile tile, Vector2 destination)
+        public MoveTileAnimation(int milliseconds, TileView tileView, Vector2 destination)
         {
             _animationTime = milliseconds;
             _currentTime = 0;
-            _tile = tile;
+            _tileView = tileView;
             IsFinished = false;
-            _direction = (destination - _tile.Position) / _animationTime;
+            _direction = (destination - _tileView.Position) / _animationTime;
         }
 
         public void Update(GameTime gameTime)
@@ -32,7 +32,7 @@ namespace GameForestMatch3
                 return;
             }
 
-            _tile.Position += _direction * (float) milliseconds;
+            _tileView.Position += _direction * (float) milliseconds;
         }
     }
 }

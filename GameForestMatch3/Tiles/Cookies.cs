@@ -4,6 +4,5 @@
     {
         public override TileType Type => TileType.Cookies;
         public override int Prize => 75;
-        public override string ContentName => "Cookies";
     }
 }

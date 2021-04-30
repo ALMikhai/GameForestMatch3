@@ -23,8 +23,8 @@ namespace GameForestMatch3
         
         public int Rows { get; }
         public int Columns { get; }
-
         public Tile[,] Matrix { get; }
+        
         public event SwapTileEventHandler TileSwapped;
         public event TileEditEventHandler TileSpawned;
         public event TileEditEventHandler TileDeleted;
@@ -148,10 +148,7 @@ namespace GameForestMatch3
 
         private void SwapTiles(TilePosition position1, TilePosition position2)
         {
-            if (Matrix[position1.Row, position1.Col].IsDeleted == false)
-                TileSwapped?.Invoke(position1, position2);
-            if (Matrix[position2.Row, position2.Col].IsDeleted == false)
-                TileSwapped?.Invoke(position2, position1);
+            TileSwapped?.Invoke(position1, position2);
 
             var tmp = Matrix[position1.Row, position1.Col];
             Matrix[position1.Row, position1.Col] = Matrix[position2.Row, position2.Col];
