@@ -14,6 +14,16 @@ namespace GameForestMatch3
 
         public int Row { get; }
         public int Col { get; }
+
+        public static bool operator ==(TilePosition lhs, TilePosition rhs)
+        {
+            return lhs?.Row == rhs?.Row && lhs?.Col == rhs?.Col;
+        }
+
+        public static bool operator !=(TilePosition lhs, TilePosition rhs)
+        {
+            return !(lhs == rhs);
+        }
     }
 
     public class BoardModel
@@ -57,6 +67,7 @@ namespace GameForestMatch3
                 case State.Backward:
                 {
                     _currentMatch = FindMatch(_secondSelectedTile);
+                    _currentMatch ??= FindMatch(_firstSelectedTile);
                     if (_currentMatch == null)
                     {
                         SwapTiles(_firstSelectedTile, _secondSelectedTile);
@@ -90,9 +101,9 @@ namespace GameForestMatch3
                             TileSpawned?.Invoke(Matrix[row, col], new TilePosition(row, col));
                         }
 
-                    ChangeState(State.Start);
-                }
+                    ChangeState(State.FindAllMatches);
                     break;
+                }
                 case State.ShiftTiles:
                 {
                     for (var row = Rows - 1; row > 0; row--)
@@ -109,6 +120,23 @@ namespace GameForestMatch3
                         }
 
                     ChangeState(State.FillTiles);
+                    break;
+                }
+                case State.FindAllMatches:
+                {
+                    for (var row = 0; row < Rows; row++)
+                    for (var col = 0; col < Columns; col++)
+                    {
+                        var match = FindMatch(new TilePosition(row, col));
+                        if (match != null)
+                        {
+                            _currentMatch = match;
+                            ChangeState(State.DeleteMatch);
+                            return;
+                        }
+                    }
+
+                    ChangeState(State.Start);
                     break;
                 }
             }
@@ -132,7 +160,8 @@ namespace GameForestMatch3
                 case State.FirstSelected:
                 {
                     Matrix[_firstSelectedTile.Row, _firstSelectedTile.Col].IsSelected = false;
-                    if (tilePosition != null && IsNearTile(tilePosition, _firstSelectedTile))
+                    if (tilePosition != null && IsNearTile(tilePosition, _firstSelectedTile) &&
+                        tilePosition != _firstSelectedTile)
                     {
                         _secondSelectedTile = tilePosition;
                         ChangeState(State.SwapTiles);
@@ -168,14 +197,14 @@ namespace GameForestMatch3
 
         private List<TilePosition> FindMatch(TilePosition position) // TODO do this simple.
         {
-            var positions = new List<TilePosition> {position};
             var checkedTile = Matrix[position.Row, position.Col];
 
+            var positions1 = new List<TilePosition> {position};
             for (var i = position.Col + 1; i < Columns; i++)
             {
                 if (Matrix[position.Row, i]?.Type == checkedTile.Type)
                 {
-                    positions.Add(new TilePosition(position.Row, i));
+                    positions1.Add(new TilePosition(position.Row, i));
                     continue;
                 }
 
@@ -186,22 +215,19 @@ namespace GameForestMatch3
             {
                 if (Matrix[position.Row, i]?.Type == checkedTile.Type)
                 {
-                    positions.Add(new TilePosition(position.Row, i));
+                    positions1.Add(new TilePosition(position.Row, i));
                     continue;
                 }
 
                 break;
             }
 
-            if (positions.Count >= 3) return positions;
-
-            positions = new List<TilePosition> {position};
-
+            var positions2 = new List<TilePosition> {position};
             for (var i = position.Row + 1; i < Rows; i++)
             {
                 if (Matrix[i, position.Col]?.Type == checkedTile.Type)
                 {
-                    positions.Add(new TilePosition(i, position.Col));
+                    positions2.Add(new TilePosition(i, position.Col));
                     continue;
                 }
 
@@ -212,14 +238,22 @@ namespace GameForestMatch3
             {
                 if (Matrix[i, position.Col]?.Type == checkedTile.Type)
                 {
-                    positions.Add(new TilePosition(i, position.Col));
+                    positions2.Add(new TilePosition(i, position.Col));
                     continue;
                 }
 
                 break;
             }
 
-            if (positions.Count >= 3) return positions;
+            if (positions1.Count >= 3 && positions1.Count >= positions2.Count)
+            {
+                return positions1;
+            }
+
+            if (positions2.Count >= 3)
+            {
+                return positions2;
+            }
 
             return null;
         }
@@ -232,7 +266,8 @@ namespace GameForestMatch3
             Backward,
             DeleteMatch,
             FillTiles,
-            ShiftTiles
+            ShiftTiles,
+            FindAllMatches
         }
     }
 }
