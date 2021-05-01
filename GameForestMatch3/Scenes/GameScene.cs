@@ -1,4 +1,5 @@
-﻿using GameForestMatch3.Tiles;
+﻿using GameForestMatch3.Board;
+using GameForestMatch3.Tiles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -7,15 +8,14 @@ namespace GameForestMatch3.Scenes
     public class GameScene : Scene
     {
         public delegate void GameEventHandler();
-
         public event GameEventHandler GameOver;
 
-        private BoardView _boardView;
-        private int _score;
-        private Vector2 _scorePosition = new Vector2(25, 25);
-        private Vector2 _timerPosition = new Vector2(25, 100);
-        private Vector2 _boardPosition = new Vector2(440, 25);
+        private readonly BoardView _boardView;
+        private readonly Vector2 _scorePosition = new Vector2(25, 25);
+        private readonly Vector2 _timerPosition = new Vector2(25, 100);
+        private readonly Vector2 _boardPosition = new Vector2(440, 25);
         private readonly Timer _timer;
+        private int _score;
 
         public GameScene(int boardRows, int boardColumns, int gameTimeMilliseconds, SpriteFont font) : base(font)
         {
