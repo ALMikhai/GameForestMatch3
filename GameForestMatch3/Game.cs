@@ -4,6 +4,7 @@ using GameForestMatch3.Tiles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using Microsoft.Xna.Framework.Media;
 
 namespace GameForestMatch3
 {
@@ -19,6 +20,7 @@ namespace GameForestMatch3
         private MouseState _previousMouseState;
         private SpriteFont _generalFont;
         private Texture2D _background;
+        private Song _backgroundSong;
 
         private MenuScene _menuScene;
         private GameOverScene _gameOverScene;
@@ -54,6 +56,7 @@ namespace GameForestMatch3
             _spriteBatch = new SpriteBatch(GraphicsDevice);
             _generalFont = Content.Load<SpriteFont>("GeneralFont");
             _background = Content.Load<Texture2D>("Background");
+            _backgroundSong = Content.Load<Song>("BackgroundSong");
             
             _menuScene = new MenuScene(_generalFont);
             _menuScene.PlayButton.Click += OnPlayButtonClick;
@@ -62,6 +65,8 @@ namespace GameForestMatch3
             _gameOverScene.OkButton.Click += OnOkButtonClick;
 
             _currentScene = _menuScene;
+            MediaPlayer.Play(_backgroundSong);
+            MediaPlayer.IsRepeating = true;
         }
 
         private void OnOkButtonClick()

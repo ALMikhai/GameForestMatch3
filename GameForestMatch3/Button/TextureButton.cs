@@ -1,5 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Media;
 
 namespace GameForestMatch3.Button
 {
@@ -11,6 +13,7 @@ namespace GameForestMatch3.Button
         public Vector2 Position { get; set; }
         public Rectangle Rectangle => new Rectangle((int)Position.X, (int)Position.Y, _texture.Width, _texture.Height);
         public string Text { get; }
+        public SoundEffect ClickSound { get; set; } = null;
         
         private SpriteFont _font;
         private Texture2D _texture;
@@ -39,6 +42,7 @@ namespace GameForestMatch3.Button
         {
             if (Rectangle.Contains(position))
             {
+                ClickSound?.CreateInstance().Play();
                 Click?.Invoke();
             }
         }
