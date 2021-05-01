@@ -1,5 +1,6 @@
 ﻿using GameForestMatch3.Board;
 using GameForestMatch3.Tiles;
+using GameForestMatch3.Utils;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 

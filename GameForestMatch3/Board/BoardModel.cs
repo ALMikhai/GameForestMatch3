@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using GameForestMatch3.Tiles;
+using GameForestMatch3.Utils;
 
 namespace GameForestMatch3.Board
 {
