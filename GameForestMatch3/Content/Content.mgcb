@@ -73,3 +73,10 @@
 /processorParam:TextureFormat=Color
 /build:../../Assets/Tiles/Сroissant.png;Сroissant.png
 
+#begin GeneralFont.spritefont
+/importer:FontDescriptionImporter
+/processor:FontDescriptionProcessor
+/processorParam:PremultiplyAlpha=True
+/processorParam:TextureFormat=Compressed
+/build:GeneralFont.spritefont
+
