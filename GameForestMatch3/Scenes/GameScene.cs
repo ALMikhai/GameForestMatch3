@@ -14,7 +14,7 @@ namespace GameForestMatch3.Scenes
         private readonly BoardView _boardView;
         private readonly Vector2 _scorePosition = new Vector2(25, 25);
         private readonly Vector2 _timerPosition = new Vector2(25, 100);
-        private readonly Vector2 _boardPosition = new Vector2(440, 25);
+        private readonly Vector2 _boardPosition = new Vector2(440, 15);
         private readonly Timer _timer;
         private int _score;
 
