@@ -19,7 +19,7 @@ namespace GameForestMatch3.Scenes
 
             _messagePosition = new Vector2(Game.StandardWidth / 2.0f - font.MeasureString(_message).X / 2.0f,
                 Game.StandardHeight / 2.0f - font.MeasureString(_message).X / 2.0f);
-            _messagePosition -= new Vector2(0, 250);
+            _messagePosition -= new Vector2(0, 350);
         }
 
         public override void Update(GameTime gameTime)

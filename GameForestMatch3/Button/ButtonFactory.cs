@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace GameForestMatch3.Button
 {
-    public class ButtonFactory
+    public static class ButtonFactory
     {
         public static ContentManager ContentManager { get; set; }
         private static Texture2D _buttonTexture2D = null;

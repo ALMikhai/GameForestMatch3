@@ -18,6 +18,7 @@ namespace GameForestMatch3
         private SpriteBatch _spriteBatch;
         private MouseState _previousMouseState;
         private SpriteFont _generalFont;
+        private Texture2D _background;
 
         private MenuScene _menuScene;
         private GameOverScene _gameOverScene;
@@ -52,7 +53,8 @@ namespace GameForestMatch3
             
             _spriteBatch = new SpriteBatch(GraphicsDevice);
             _generalFont = Content.Load<SpriteFont>("GeneralFont");
-
+            _background = Content.Load<Texture2D>("Background");
+            
             _menuScene = new MenuScene(_generalFont);
             _menuScene.PlayButton.Click += OnPlayButtonClick;
 
@@ -105,6 +107,7 @@ namespace GameForestMatch3
             GraphicsDevice.Clear(Color.CornflowerBlue);
             _spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, _screenScaleMatrix);
 
+            _spriteBatch.Draw(_background, Vector2.Zero, Color.White);
             _currentScene.Draw(_spriteBatch);
 
             _spriteBatch.End();
