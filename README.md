@@ -11,7 +11,7 @@ dotnet build --configuration Release
 # Assets
 Tile textures - https://free-game-assets.itch.io/free-match-3-game-assets
 
-Background rexture - https://cartooncoffee.itch.io/sunnycloud
+Background texture - https://cartooncoffee.itch.io/sunnycloud
 
 Button texture - https://wenrexa.itch.io/ui-different01
 
