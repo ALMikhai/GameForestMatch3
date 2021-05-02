@@ -5,7 +5,7 @@ namespace GameForestMatch3.Utils
 {
     public class RandomTilesGenerator
     {
-        private Random _random = new Random(0);
+        private Random _random = new Random();
         public int MatrixRows { get; }
         public int MatrixColumns { get; }
 

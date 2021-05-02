@@ -53,6 +53,7 @@ namespace GameForestMatch3.Board
             Columns = columns;
             _tilesGenerator = new RandomTilesGenerator(rows, columns);
             Matrix = _tilesGenerator.GetInitMatrix();
+            ChangeState(State.FindAllMatches);
         }
 
         public void Update()
