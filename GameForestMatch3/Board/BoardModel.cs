@@ -7,23 +7,28 @@ namespace GameForestMatch3.Board
 {
     public class TilePosition
     {
+        public int Row { get; }
+        public int Col { get; }
+
         public TilePosition(int row, int col)
         {
             Row = row;
             Col = col;
         }
-
-        public int Row { get; }
-        public int Col { get; }
-
-        public static bool operator ==(TilePosition lhs, TilePosition rhs)
+        
+        public override bool Equals(object obj)
         {
-            return lhs?.Row == rhs?.Row && lhs?.Col == rhs?.Col;
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+
+            var other = (TilePosition) obj;
+            return Row == other.Row && Col == other.Col;
         }
 
-        public static bool operator !=(TilePosition lhs, TilePosition rhs)
+        public override int GetHashCode()
         {
-            return !(lhs == rhs);
+            return HashCode.Combine(Row, Col);
         }
     }
 
@@ -163,7 +168,7 @@ namespace GameForestMatch3.Board
                 {
                     Matrix[_firstSelectedTile.Row, _firstSelectedTile.Col].IsSelected = false;
                     if (tilePosition != null && IsNearTile(tilePosition, _firstSelectedTile) &&
-                        tilePosition != _firstSelectedTile)
+                        !tilePosition.Equals(_firstSelectedTile))
                     {
                         _secondSelectedTile = tilePosition;
                         ChangeState(State.SwapTiles);
