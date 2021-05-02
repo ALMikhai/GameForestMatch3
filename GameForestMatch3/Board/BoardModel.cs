@@ -202,7 +202,7 @@ namespace GameForestMatch3.Board
             Matrix[position2.Row, position2.Col] = tmp;
         }
 
-        private List<TilePosition> FindMatch(TilePosition position) // TODO do this simple.
+        private List<TilePosition> FindMatch(TilePosition position)
         {
             var checkedTile = Matrix[position.Row, position.Col];
 

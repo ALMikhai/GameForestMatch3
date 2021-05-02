@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework;
 
 namespace GameForestMatch3.Utils
 {
-    public class MoveTileAnimation // TODO Maybe IsFinished is event?
     public class MoveTileAnimation
     {
         private readonly int _animationTime;

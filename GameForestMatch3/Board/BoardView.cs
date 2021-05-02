@@ -66,7 +66,7 @@ namespace GameForestMatch3.Board
         private void BoardModelOnTileDeleted(Tile tile, TilePosition position)
         {
             var destination = new Vector2(-TileView.TextureSize.X * 2, -TileView.TextureSize.Y * 2);
-            _animations.Add(new MoveTileAnimation(250, _matrix[position.Row, position.Col], destination));
+            _animations.Add(new MoveTileAnimation(350, _matrix[position.Row, position.Col], destination));
         }
 
         private void BoardModelOnTileSpawned(Tile tile, TilePosition position)
@@ -75,22 +75,22 @@ namespace GameForestMatch3.Board
             var tileView = TileFactory.CreateTileView(tile);
             tileView.Position = new Vector2(destination.X, -TileView.TextureSize.Y);
             _matrix[position.Row, position.Col] = tileView;
-            _animations.Add(new MoveTileAnimation(250, _matrix[position.Row, position.Col], destination));
+            _animations.Add(new MoveTileAnimation(350, _matrix[position.Row, position.Col], destination));
         }
 
-        private void BoardModelOnTileSwapped(TilePosition position1, TilePosition position2) // TODO do this simple. 
+        private void BoardModelOnTileSwapped(TilePosition position1, TilePosition position2)
         {
             if (_matrix[position1.Row, position1.Col].Tile.IsDeleted == false)
             {
                 var destination = GetTileDrawPosition(position2.Row, position2.Col);
-                _animations.Add(new MoveTileAnimation(750, _matrix[position1.Row, position1.Col],
+                _animations.Add(new MoveTileAnimation(450, _matrix[position1.Row, position1.Col],
                     destination));
             }
 
             if (_matrix[position2.Row, position2.Col].Tile.IsDeleted == false)
             {
                 var destination = GetTileDrawPosition(position1.Row, position1.Col);
-                _animations.Add(new MoveTileAnimation(750, _matrix[position2.Row, position2.Col],
+                _animations.Add(new MoveTileAnimation(450, _matrix[position2.Row, position2.Col],
                     destination));
             }
 
